@@ -9,7 +9,7 @@ app.get('/', function(req,res){
 })
 
 app.post('/', function(req, res){
-    res.send("Thank you for downloading!")
+    
 })
 
 module.exports.app = app;
