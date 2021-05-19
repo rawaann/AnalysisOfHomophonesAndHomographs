@@ -1,0 +1,90 @@
+<head>
+    <title>
+        Analysis of Homophones and Homographs
+    </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container mt-3">
+    <span><a id="download" style="display: none;"><button type="button" class="btn btn-primary mb-4"> Download</button></a></span>
+    <button type="button" class="btn btn-danger" id="stop" disabled>Stop</button>
+    <button type="button" onclick="recordAudio()" class="btn btn-info">Record Audio</button>
+    <iframe id="presentation" src="https://onedrive.live.com/embed?cid=5E380016F348131E&resid=5E380016F348131E%211127&authkey=AFt5ytJz22j5FSg&em=2" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
+    <div class="p-5">
+        <video autoplay height='480' width="640" muted></video>
+    </div>
+    </div>
+</body>
+<script>
+    const targetAge = window.prompt('Enter your age please:')
+    if(targetAge<10){
+        document.getElementById("presentation").src = "https://onedrive.live.com/embed?cid=5E380016F348131E&resid=5E380016F348131E%211126&authkey=AHDb-hCxIs1KOeY&em=2"
+    }
+    let shouldStop = false;
+    let stopped = false;
+    const videoElement = document.getElementsByTagName("video")[0];
+    const downloadLink = document.getElementById('download');
+    const stopButton = document.getElementById('stop');
+    function startRecord() {
+        $('.btn-info').prop('disabled', true);
+        $('#stop').prop('disabled', false);
+        $('#download').css('display', 'none')
+    }
+    function stopRecord() {
+        $('.btn-info').prop('disabled', false);
+        $('#stop').prop('disabled', true);
+        $('#download').css('display', 'block')
+    }
+    const audioRecordConstraints = {
+        echoCancellation: true
+    }
+
+    stopButton.addEventListener('click', function () {
+        shouldStop = true;
+    });
+
+    const handleRecord = function ({stream, mimeType}) {
+        startRecord()
+        let recordedChunks = [];
+        stopped = false;
+        const mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = function (e) {
+            if (e.data.size > 0) {
+                recordedChunks.push(e.data);
+            }
+
+            if (shouldStop === true && stopped === false) {
+                mediaRecorder.stop();
+                stopped = true;
+            }
+        };
+           mediaRecorder.onstop = function () {
+            const blob = new Blob(recordedChunks, {
+                type: mimeType
+            });
+            recordedChunks = []
+            const filename = window.prompt('Enter your name');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = `${filename || 'recording'}.webm`;
+            stopRecord();
+            videoElement.srcObject = null;
+        };
+
+        mediaRecorder.start(200);
+    };
+
+    async function recordAudio() {
+        const mimeType = 'audio/webm';
+        shouldStop = false;
+        const stream = await navigator.mediaDevices.getUserMedia({audio: audioRecordConstraints});
+        handleRecord({stream, mimeType})
+    }
+
+</script>
+
+</html>
